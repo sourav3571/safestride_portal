@@ -1,0 +1,251 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 215 28% 17%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 28% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 17%;
+
+    --primary: 263 70% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 330 81% 82%;
+    --secondary-foreground: 263 70% 40%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 262 83% 63%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 263 70% 58%;
+
+    --radius: 0.75rem;
+
+    /* Custom SafeStride Colors */
+    --violet: 262 83% 63%;
+    --violet-light: 262 83% 93%;
+    --rose: 351 83% 72%;
+    --rose-light: 351 83% 92%;
+    --emerald: 160 84% 39%;
+    --amber: 38 92% 50%;
+    --slate-body: 215 16% 47%;
+    --slate-heading: 215 28% 17%;
+
+    /* Gradients as CSS custom properties */
+    --gradient-primary: linear-gradient(135deg, hsl(263, 70%, 58%) 0%, hsl(262, 83%, 63%) 50%, hsl(330, 81%, 72%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(263, 80%, 98%) 100%);
+    --gradient-section: linear-gradient(180deg, hsl(263, 80%, 98%) 0%, hsl(0, 0%, 100%) 100%);
+    --gradient-cta: linear-gradient(135deg, hsl(263, 70%, 58%) 0%, hsl(262, 83%, 55%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(263, 50%, 99%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(263 70% 58% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(263 70% 58% / 0.1), 0 2px 4px -2px hsl(263 70% 58% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(263 70% 58% / 0.1), 0 4px 6px -4px hsl(263 70% 58% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(263 70% 58% / 0.1), 0 8px 10px -6px hsl(263 70% 58% / 0.1);
+    --shadow-glow: 0 0 40px hsl(263 70% 58% / 0.3);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --card: 224 71% 6%;
+    --card-foreground: 213 31% 91%;
+
+    --popover: 224 71% 6%;
+    --popover-foreground: 213 31% 91%;
+
+    --primary: 263 70% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 330 30% 20%;
+    --secondary-foreground: 330 81% 82%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215 16% 65%;
+
+    --accent: 262 83% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 160 84% 35%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 45%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+    --ring: 263 70% 58%;
+
+    --gradient-hero: linear-gradient(180deg, hsl(224, 71%, 4%) 0%, hsl(263, 50%, 8%) 100%);
+    --gradient-section: linear-gradient(180deg, hsl(263, 50%, 8%) 0%, hsl(224, 71%, 4%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(224, 71%, 8%) 0%, hsl(263, 40%, 10%) 100%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-slate-heading;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .font-display {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .gradient-bg {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-section {
+    background: var(--gradient-section);
+  }
+
+  .gradient-cta {
+    background: var(--gradient-cta);
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-xl border border-white/50;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .glass-card-dark {
+    @apply bg-black/20 backdrop-blur-xl border border-white/10;
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .shadow-card-hover {
+    box-shadow: var(--shadow-xl);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Leaflet map overrides */
+.leaflet-container {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.leaflet-popup-content-wrapper {
+  @apply rounded-xl shadow-lg;
+}
+
+.leaflet-popup-content {
+  margin: 12px 16px;
+}

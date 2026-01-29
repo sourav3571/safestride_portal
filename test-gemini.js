@@ -13,9 +13,9 @@ async function test() {
         console.log("Using API Key:", apiKey.substring(0, 10) + "..." + apiKey.substring(apiKey.length - 4));
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-        console.log("Testing gemini-pro...");
+        console.log("Testing gemini-flash-latest...");
         const result = await model.generateContent("Test message");
         console.log("Success! Response:", result.response.text());
     } catch (error) {

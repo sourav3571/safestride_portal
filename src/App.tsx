@@ -14,6 +14,7 @@ import SOS from "./pages/SOS";
 import About from "./pages/About";
 import Report from "./pages/Report";
 import Resources from "./pages/Resources";
+import TechStack from "./pages/TechStack";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/report" element={<Report />} />
               <Route path="/resources" element={<Resources />} />
+              <Route path="/tech-stack" element={<TechStack />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

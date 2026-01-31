@@ -125,6 +125,7 @@ const SafetyMapComponent = ({
       scrollWheelZoom: true,
       minZoom: 4,
       maxZoom: 18,
+      attributionControl: false,
     });
 
     mapInstanceRef.current = map;

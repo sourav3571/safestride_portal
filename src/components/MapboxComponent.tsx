@@ -23,6 +23,9 @@ const markerIcons: Record<string, string> = {
   police: "🚔",
   hospital: "🏥",
   safespace: "🏠",
+  cctv: "📹",
+  lighting: "💡",
+  transport: "🚌",
 };
 
 export const MapboxComponent: React.FC<MapboxComponentProps> = ({
@@ -30,7 +33,7 @@ export const MapboxComponent: React.FC<MapboxComponentProps> = ({
   center = { lat: 20.5937, lng: 78.9629 },
   zoom = 5,
   className = "h-[600px] w-full",
-  activeFilters = ["safe", "moderate", "incident", "police", "hospital", "safespace"],
+  activeFilters = ["safe", "moderate", "incident", "police", "hospital", "safespace", "cctv", "lighting", "transport"],
   onMarkerClick,
   routes = [],
   startMarker = null,
@@ -39,14 +42,19 @@ export const MapboxComponent: React.FC<MapboxComponentProps> = ({
   const token = import.meta.env.VITE_MAPBOX_API_KEY as string | undefined;
 
   const unfiltered = markers || indiaMarkers;
+  console.log("MAPBOX: unfiltered count:", unfiltered.length);
+  console.log("MAPBOX: activeFilters:", activeFilters);
 
   const [popupId, setPopupId] = useState<string | null>(null);
 
-  const filtered = useMemo(() =>
-    unfiltered.filter(m => {
+  const filtered = useMemo(() => {
+    const f = unfiltered.filter(m => {
       if (!activeFilters.includes(m.type)) return false;
       return true;
-    }),
+    });
+    console.log("MAPBOX: filtered count:", f.length);
+    return f;
+  },
     [unfiltered, activeFilters]
   );
 
@@ -142,49 +150,47 @@ export const MapboxComponent: React.FC<MapboxComponentProps> = ({
           </Marker>
         )}
 
-        <AnimatePresence>
-          {filtered.map((m) => (
-            <React.Fragment key={m.id}>
-              <Marker
+        {filtered.map((m) => (
+          <React.Fragment key={m.id}>
+            <Marker
+              longitude={m.lng}
+              latitude={m.lat}
+              anchor="bottom"
+              onClick={(e) => {
+                e.originalEvent.stopPropagation();
+                setPopupId(m.id);
+                onMarkerClick && onMarkerClick(m);
+              }}
+            >
+              <div
+                className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-white shadow-md cursor-pointer text-sm hover:scale-110 transition-transform"
+                style={{ background: markerColors[m.type as keyof typeof markerColors] }}
+              >
+                {markerIcons[m.type] || "📍"}
+              </div>
+            </Marker>
+
+            {popupId === m.id && (
+              <Popup
                 longitude={m.lng}
                 latitude={m.lat}
-                anchor="bottom"
-                onClick={(e) => {
-                  e.originalEvent.stopPropagation();
-                  setPopupId(m.id);
-                  onMarkerClick && onMarkerClick(m);
-                }}
+                anchor="top"
+                onClose={() => setPopupId(null)}
+                closeOnClick={false}
               >
-                <div
-                  className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-white shadow-md cursor-pointer text-sm"
-                  style={{ background: markerColors[m.type as keyof typeof markerColors] }}
-                >
-                  {markerIcons[m.type] || "📍"}
+                <div className="w-64 p-2 bg-white rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-3 h-3 rounded-full" style={{ background: markerColors[m.type as keyof typeof markerColors] }} />
+                    <span className="text-xs text-gray-500">{markerLabels[m.type as keyof typeof markerLabels]}</span>
+                  </div>
+                  <h3 className="font-semibold">{m.title}</h3>
+                  {m.description && <p className="text-sm text-gray-600">{m.description}</p>}
+                  <div className="text-xs text-gray-500 mt-1">{m.lat.toFixed(4)}, {m.lng.toFixed(4)}</div>
                 </div>
-              </Marker>
-
-              {popupId === m.id && (
-                <Popup
-                  longitude={m.lng}
-                  latitude={m.lat}
-                  anchor="top"
-                  onClose={() => setPopupId(null)}
-                  closeOnClick={false}
-                >
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-64 p-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="w-3 h-3 rounded-full" style={{ background: markerColors[m.type as keyof typeof markerColors] }} />
-                      <span className="text-xs text-gray-500">{markerLabels[m.type as keyof typeof markerLabels]}</span>
-                    </div>
-                    <h3 className="font-semibold">{m.title}</h3>
-                    {m.description && <p className="text-sm text-gray-600">{m.description}</p>}
-                    <div className="text-xs text-gray-500 mt-1">{m.lat.toFixed(4)}, {m.lng.toFixed(4)}</div>
-                  </motion.div>
-                </Popup>
-              )}
-            </React.Fragment>
-          ))}
-        </AnimatePresence>
+              </Popup>
+            )}
+          </React.Fragment>
+        ))}
       </Map>
 
       <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-md p-3 border border-gray-200 z-10">

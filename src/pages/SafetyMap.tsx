@@ -43,7 +43,10 @@ const SafetyMap = () => {
   const [endCoord, setEndCoord] = useState<{ lat: number; lng: number } | null>(null);
 
   // Combine static markers with firebase incidents
-  const [combinedMarkers, setCombinedMarkers] = useState(indiaMarkers);
+  const [combinedMarkers, setCombinedMarkers] = useState<any[]>([
+    ...indiaMarkers,
+    { id: "debug-1", lat: 19.314962, lng: 84.794090, type: "safe", title: "DEBUG MARKER", description: "If you see this, markers work." }
+  ]);
 
   useEffect(() => {
     if (firebaseIncidents.length > 0) {
@@ -62,6 +65,12 @@ const SafetyMap = () => {
     }
   }, [firebaseIncidents]);
 
+  useEffect(() => {
+    console.log("SAFETY MAP: combinedMarkers length:", combinedMarkers.length);
+    console.log("SAFETY MAP: activeFilters:", activeFilters);
+    console.log("SAFETY MAP: First marker:", combinedMarkers[0]);
+  }, [combinedMarkers, activeFilters]);
+
   // Load Firebase incidents on mount
   useEffect(() => {
     const loadIncidents = async () => {
@@ -76,6 +85,11 @@ const SafetyMap = () => {
       }
     };
     loadIncidents();
+  }, []);
+
+  // Force-enable all filters on mount to ensure new safety layers are visible (fixes stale state)
+  useEffect(() => {
+    setActiveFilters(legendItems.map(l => l.type));
   }, []);
 
   const toggleFilter = (type: string) => {

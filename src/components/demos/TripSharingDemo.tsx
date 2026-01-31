@@ -260,7 +260,7 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
 
             {/* Map Area */}
             <div className="flex-1 relative bg-gray-100 dark:bg-gray-800">
-                <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: "100%", width: "100%" }}>
+                <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: "100%", width: "100%" }} attributionControl={false}>
                     <TileLayer
                         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

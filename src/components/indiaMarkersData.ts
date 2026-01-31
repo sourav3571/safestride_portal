@@ -88,7 +88,7 @@ export const indiaMarkers: MapMarker[] = [
     { id: "or10-bm", lat: 19.3200, lng: 84.8100, type: "hospital", title: "Brahmapur General Hospital", description: "24/7 emergency care" },
     { id: "or11-bm", lat: 19.2535, lng: 84.8150, type: "safe", title: "NIST University Campus", description: "Secured educational campus (Palur Hills, near Golanthara)" },
 
-    // Berhampur Safety Layers
+    // Berhampur Safety Layers (Expanded)
     { id: "bm-cctv1", lat: 19.3110, lng: 84.7980, type: "cctv", title: "Annapurna Market CCTV", description: "24/7 Surveillance Zone" },
     { id: "bm-cctv2", lat: 19.3160, lng: 84.7930, type: "cctv", title: "Old Bus Stand CCTV", description: "Monitored Transit Hub" },
     { id: "bm-light1", lat: 19.3130, lng: 84.8010, type: "lighting", title: "PVN Rao Road", description: "High Intensity Street Lighting" },
@@ -96,15 +96,61 @@ export const indiaMarkers: MapMarker[] = [
     { id: "bm-trans1", lat: 19.3080, lng: 84.8230, type: "transport", title: "Berhampur Railway Station", description: "Major Transport Hub (RPF Protected)" },
     { id: "bm-trans2", lat: 19.3155, lng: 84.7925, type: "transport", title: "New Bus Stand", description: "Inter-state Bus Terminus" },
 
-    // Bhubaneswar
-    { id: "or7", lat: 20.2444, lng: 85.8189, type: "hospital", title: "AIIMS Bhubaneswar", description: "Premier central govt hospital" },
-    { id: "or8", lat: 20.2961, lng: 85.8245, type: "police", title: "Odisha Police HQ", description: "State police command center" },
-    { id: "or9", lat: 20.2921, lng: 85.8456, type: "safe", title: "Saheed Nagar Market", description: "Busy and well-lit shopping area" },
-    { id: "or10", lat: 20.3547, lng: 85.8156, type: "hospital", title: "KIIMS Hospital", description: "Major private healthcare center" },
+    // Berhampur - Hospitals & Police
+    { id: "bm-hosp1", lat: 19.3060, lng: 84.8090, type: "hospital", title: "MKCG Medical College", description: "Major Referral Hospital & Trauma Center" },
+    { id: "bm-hosp2", lat: 19.3150, lng: 84.7900, type: "hospital", title: "City Hospital", description: "24/7 Emergency Services" },
+    { id: "bm-pol1", lat: 19.3120, lng: 84.7950, type: "police", title: "Town Police Station", description: "Central Law Enforcement" },
+    { id: "bm-pol2", lat: 19.3250, lng: 84.7850, type: "police", title: "Baidyanathpur Police Station", description: "Local Security Unit" },
 
-    // Cuttack
-    { id: "or11", lat: 20.4625, lng: 85.8830, type: "hospital", title: "SCB Medical College", description: "Historical and major medical hub" },
-    { id: "or12", lat: 20.4578, lng: 85.8664, type: "safe", title: "Ravenshaw University", description: "Educational hub with campus security" },
+    // Berhampur - Safe Zones & Risks
+    { id: "bm-safe1", lat: 19.3000, lng: 84.8100, type: "safespace", title: "Khallikote University Campus", description: "Secured Educational Zone" },
+    { id: "bm-safe2", lat: 19.2550, lng: 84.9000, type: "safe", title: "Gopalpur Port Road", description: "Patrolled Tourist Route" },
+    { id: "bm-risk1", lat: 19.3100, lng: 84.7900, type: "moderate", title: "Girija Square", description: "High Traffic Congestion - Caution" },
+    { id: "bm-inc1", lat: 19.3180, lng: 84.8000, type: "incident", title: "Road Construction", description: "Live: Diversion near Courtpeta" },
+
+    // Berhampur - High Density Additions (Schools, Banks, More Safe Zones)
+    { id: "bm-sch1", lat: 19.3090, lng: 84.8000, type: "safe", title: "St. Vincents Convent School", description: "School Zone - Reduced Speed" },
+    { id: "bm-sch2", lat: 19.3200, lng: 84.7900, type: "safe", title: "De Paul School", description: "Educational Area" },
+    { id: "bm-bank1", lat: 19.3115, lng: 84.7960, type: "safe", title: "SBI Main Branch", description: "ATM and Guarded Bank" },
+    { id: "bm-pharm1", lat: 19.3070, lng: 84.8100, type: "hospital", title: "Apollo Pharmacy", description: "24/7 Medicine Store" },
+    { id: "bm-cctv3", lat: 19.3220, lng: 84.7880, type: "cctv", title: "Courtpeta Square CCTV", description: "Traffic Surveillance" },
+    { id: "bm-cctv4", lat: 19.3140, lng: 84.7990, type: "cctv", title: "Giri Road CCTV", description: "Commercial Area Monitoring" },
+    { id: "bm-park1", lat: 19.3255, lng: 84.8020, type: "safespace", title: "Biju Patnaik Park", description: "Family Park (Well Lit)" },
+    { id: "bm-light3", lat: 19.3160, lng: 84.8150, type: "lighting", title: "Hill Patna Main Road", description: "Bright LED Street Lights" },
+    { id: "bm-fuel1", lat: 19.3050, lng: 84.8180, type: "safe", title: "Indian Oil Petrol Pump", description: "24/7 Service Station" },
+
+    // Bhubaneswar - High Density (Smart City Grid)
+    { id: "bbsr-sch1", lat: 20.2900, lng: 85.8300, type: "safe", title: "DAV Public School, Unit-8", description: "School Zone - CCTV Monitored" },
+    { id: "bbsr-sch2", lat: 20.3200, lng: 85.8100, type: "safe", title: "KIIT International School", description: "High Security Campus" },
+    { id: "bbsr-bank1", lat: 20.2950, lng: 85.8400, type: "safe", title: "SBI Main Branch, Unit-1", description: "Central Banking Zone" },
+    { id: "bbsr-emall1", lat: 20.3000, lng: 85.8700, type: "cctv", title: "Esplanade One Mall", description: "Full Mall Surveillance Coverage" },
+    { id: "bbsr-pharm1", lat: 20.2800, lng: 85.8200, type: "hospital", title: "Apollo 24/7 Pharmacy", description: "Night Emergency Meds" },
+    { id: "bbsr-fuel1", lat: 20.2600, lng: 85.8500, type: "safe", title: "Bharat Petroleum, Khandagiri", description: "24/7 Fuel & Rest Stop" },
+    { id: "bbsr-park1", lat: 20.2700, lng: 85.8300, type: "safespace", title: "Forest Park (Biju Patnaik)", description: "Well Lit Walking Tracks" },
+
+    // Cuttack - High Density (Silver City)
+    { id: "ctc-sch1", lat: 20.4600, lng: 85.8800, type: "safe", title: "Stewart School", description: "Active School Zone" },
+    { id: "ctc-bank1", lat: 20.4500, lng: 85.8700, type: "safe", title: "SBI SCB Branch", description: "Hospital Campus Bank" },
+    { id: "ctc-stad1", lat: 20.4800, lng: 85.8600, type: "cctv", title: "Barabati Stadium Complex", description: "Event Zone Surveillance" },
+    { id: "ctc-pharm1", lat: 20.4650, lng: 85.8900, type: "hospital", title: "Ranihat Medical Stores", description: "Cluster of 24h Pharmacies" },
+
+    // Rourkela - High Density (Steel City)
+    { id: "rkl-sch1", lat: 22.2300, lng: 84.8600, type: "safe", title: "St. Pauls School", description: "Hamirpur School Zone" },
+    { id: "rkl-sec1", lat: 22.2400, lng: 84.8200, type: "safe", title: "Sector 5 Market", description: "RSP Secured Market" },
+    { id: "rkl-park1", lat: 22.2200, lng: 84.8100, type: "safespace", title: "IG Park", description: "Central Public Park" },
+    { id: "rkl-fuel1", lat: 22.2500, lng: 84.8800, type: "media", title: "Panposh Fuel Station", description: "Highway Service Station" },
+
+    // Sambalpur - High Density
+    { id: "sbp-univ1", lat: 21.4800, lng: 83.9800, type: "safe", title: "GM University Campus", description: "Student Safe Zone" },
+    { id: "sbp-dam1", lat: 21.5200, lng: 83.8800, type: "cctv", title: "Hirakud Dam Entry", description: "High Security Zone" },
+    { id: "sbp-bank1", lat: 21.4700, lng: 83.9700, type: "safe", title: "Andhra Bank Main Road", description: "Commercial Area" },
+
+    // Puri - High Density (Holy City)
+    { id: "puri-temple1", lat: 19.8000, lng: 85.8200, type: "cctv", title: "Jagannath Temple Perimeter", description: "High Security Pilgrimage Zone" },
+    { id: "puri-hotel1", lat: 19.7900, lng: 85.8100, type: "safe", title: "CT Road Hotels", description: "Tourist Police Patrolled" },
+    { id: "puri-park1", lat: 19.8100, lng: 85.8400, type: "safespace", title: "Blue Flag Beach", description: "International Safety Standards Beach" },
+
+    // Bhubaneswar
 
     // --- OTHERS ---
     // Bihar - Patna

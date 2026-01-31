@@ -88,6 +88,14 @@ export const indiaMarkers: MapMarker[] = [
     { id: "or10-bm", lat: 19.3200, lng: 84.8100, type: "hospital", title: "Brahmapur General Hospital", description: "24/7 emergency care" },
     { id: "or11-bm", lat: 19.2535, lng: 84.8150, type: "safe", title: "NIST University Campus", description: "Secured educational campus (Palur Hills, near Golanthara)" },
 
+    // Berhampur Safety Layers
+    { id: "bm-cctv1", lat: 19.3110, lng: 84.7980, type: "cctv", title: "Annapurna Market CCTV", description: "24/7 Surveillance Zone" },
+    { id: "bm-cctv2", lat: 19.3160, lng: 84.7930, type: "cctv", title: "Old Bus Stand CCTV", description: "Monitored Transit Hub" },
+    { id: "bm-light1", lat: 19.3130, lng: 84.8010, type: "lighting", title: "PVN Rao Road", description: "High Intensity Street Lighting" },
+    { id: "bm-light2", lat: 19.3210, lng: 84.7960, type: "lighting", title: "Engineering School Road", description: "Well Lit Educational Zone" },
+    { id: "bm-trans1", lat: 19.3080, lng: 84.8230, type: "transport", title: "Berhampur Railway Station", description: "Major Transport Hub (RPF Protected)" },
+    { id: "bm-trans2", lat: 19.3155, lng: 84.7925, type: "transport", title: "New Bus Stand", description: "Inter-state Bus Terminus" },
+
     // Bhubaneswar
     { id: "or7", lat: 20.2444, lng: 85.8189, type: "hospital", title: "AIIMS Bhubaneswar", description: "Premier central govt hospital" },
     { id: "or8", lat: 20.2961, lng: 85.8245, type: "police", title: "Odisha Police HQ", description: "State police command center" },
@@ -155,6 +163,82 @@ export const indiaMarkers: MapMarker[] = [
     { id: "od8", lat: 19.3149, lng: 84.7941, type: "police", title: "Berhampur SP Office", description: "South Odisha security command" },
     { id: "od9", lat: 18.8105, lng: 82.7126, type: "hospital", title: "SLN Medical College", description: "Koraput medical hub" },
     { id: "od10", lat: 21.8415, lng: 84.0305, type: "police", title: "Jharsuguda Industrial PS", description: "Key industrial security" },
+
+    // --- ODISHA SAFETY LAYER EXPANSION (CCTV, Lighting, Transport) ---
+    // Bhubaneswar
+    { id: "bbsr-cctv1", lat: 20.2961, lng: 85.8245, type: "cctv", title: "Master Canteen CCTV", description: "Smart City Surveillance Hub" },
+    { id: "bbsr-cctv2", lat: 20.3588, lng: 85.8332, type: "cctv", title: "Patia Chowk Surveillance", description: "Traffic and Safety Monitoring" },
+    { id: "bbsr-light1", lat: 20.3010, lng: 85.8309, type: "lighting", title: "Janpath LED Zone", description: "Smart Street Lighting Corridor" },
+    { id: "bbsr-light2", lat: 20.2442, lng: 85.8170, type: "lighting", title: "AIIMS Road Lighting", description: "High visibility night zone" },
+    { id: "bbsr-trans1", lat: 20.2667, lng: 85.8427, type: "transport", title: "Bhubaneswar Railway Station", description: "Main Transit Node with RPF" },
+    { id: "bbsr-trans2", lat: 20.2905, lng: 85.8075, type: "transport", title: "Baramunda Bus Stand", description: "Inter-State Bus Terminal (ISBT)" },
+    { id: "bbsr-pol1", lat: 20.2890, lng: 85.8350, type: "police", title: "Capital Police Station", description: "Central Police HQ" },
+    { id: "bbsr-hosp1", lat: 20.3060, lng: 85.8150, type: "hospital", title: "Apollo Hospitals Bhubaneswar", description: "Super Speciality Care" },
+    { id: "bbsr-risk1", lat: 20.3200, lng: 85.8000, type: "moderate", title: "Rasulgarh Intersection", description: "High Traffic Alert Area" },
+    { id: "bbsr-ev1", lat: 20.2900, lng: 85.8450, type: "incident", title: "Water Logging Alert", description: "Reported: Heavy water logging near Lakshmi Sagar" },
+
+    // Cuttack
+    { id: "ctc-cctv1", lat: 20.4632, lng: 85.8797, type: "cctv", title: "Badambadi CCTV Grid", description: "Transport Hub Surveillance" },
+    { id: "ctc-cctv2", lat: 20.4789, lng: 85.8265, type: "cctv", title: "CDA Sector 6 CCTV", description: "Residential Safety Monitoring" },
+    { id: "ctc-light1", lat: 20.4852, lng: 85.8700, type: "lighting", title: "Ring Road Illumination", description: "Well lit river-side road" },
+    { id: "ctc-trans1", lat: 20.4720, lng: 85.8950, type: "transport", title: "Cuttack Railway Station", description: "Major Railway Junction" },
+    { id: "ctc-pol1", lat: 20.4500, lng: 85.8600, type: "police", title: "Cuttack DCP Office", description: "District Police Command" },
+    { id: "ctc-safe1", lat: 20.4800, lng: 85.8500, type: "safe", title: "Barabati Stadium Zone", description: "High Security Event Zone" },
+    { id: "ctc-risk1", lat: 20.4550, lng: 85.8850, type: "moderate", title: "Ranihat Bridge", description: "Congestion and Low Light Caution" },
+
+    // Puri
+    { id: "puri-cctv1", lat: 19.8050, lng: 85.8180, type: "cctv", title: "Grand Road (Bada Danda)", description: "Pilgrimage Route Surveillance" },
+    { id: "puri-light1", lat: 19.7944, lng: 85.8248, type: "lighting", title: "Marine Drive Lighting", description: "Tourist beach road lighting" },
+    { id: "puri-trans1", lat: 19.8168, lng: 85.8285, type: "transport", title: "Puri Railway Station", description: "Tourist Transit Security" },
+    { id: "puri-pol1", lat: 19.8080, lng: 85.8250, type: "police", title: "Sea Beach Police Station", description: "Tourist Safety Unit" },
+    { id: "puri-hosp1", lat: 19.8120, lng: 85.8350, type: "hospital", title: "Puri District Hospital", description: "Emergency Services" },
+    { id: "puri-inc1", lat: 19.7990, lng: 85.8300, type: "incident", title: "High Tide Warning", description: "Live Safety: High waves reported at Golden Beach" },
+
+    // Rourkela
+    { id: "rkl-cctv1", lat: 22.2258, lng: 84.8626, type: "cctv", title: "Udit Nagar CCTV", description: "Commercial district monitoring" },
+    { id: "rkl-light1", lat: 22.2492, lng: 84.8828, type: "lighting", title: "Ring Road Rourkela", description: "Industrial corridor lighting" },
+    { id: "rkl-trans1", lat: 22.2215, lng: 84.8055, type: "transport", title: "Rourkela Junction", description: "Key railway station" },
+    { id: "rkl-pol1", lat: 22.2300, lng: 84.8500, type: "police", title: "Plant Site PS", description: "Industrial Security" },
+    { id: "rkl-safe1", lat: 22.2500, lng: 84.9000, type: "safespace", title: "NIT Rourkela Campus", description: "Secured Institutional Area" },
+    { id: "rkl-risk1", lat: 22.2100, lng: 84.8400, type: "moderate", title: "Daily Market", description: "Crowded Area Caution" },
+
+    // Sambalpur
+    { id: "sbp-cctv1", lat: 21.4682, lng: 83.9715, type: "cctv", title: "Gole Bazar CCTV", description: "Market area surveillance" },
+    { id: "sbp-light1", lat: 21.4925, lng: 83.9934, type: "lighting", title: "VSS Marg Lighting", description: "Main arterial road lighting" },
+    { id: "sbp-trans1", lat: 21.4947, lng: 83.9712, type: "transport", title: "Sambalpur Station", description: "Western Odisha main junction" },
+    { id: "sbp-pol1", lat: 21.4700, lng: 83.9800, type: "police", title: "Town Police Station", description: "City Center Security" },
+    { id: "sbp-hosp1", lat: 21.5000, lng: 83.9000, type: "hospital", title: "VIMSAR Burla", description: "Major Medical College nearby" },
+    { id: "sbp-risk1", lat: 21.4600, lng: 83.9600, type: "incident", title: "Road Repair Work", description: "Live: Traffic diversion in effect" },
+
+    // Balasore
+    { id: "bls-cctv1", lat: 21.4940, lng: 86.9310, type: "cctv", title: "Balasore Station Square", description: "Traffic and Safety CCTV" },
+    { id: "bls-trans1", lat: 21.4960, lng: 86.9400, type: "transport", title: "Balasore Railway Station", description: "Junction station" },
+    { id: "bls-pol1", lat: 21.4900, lng: 86.9500, type: "police", title: "Sahadevkhuntha PS", description: "Central Police Station" },
+    { id: "bls-hosp1", lat: 21.4800, lng: 86.9400, type: "hospital", title: "Balasore DHH", description: "District Headquarters Hospital" },
+
+    // Angul & Talcher (Industrial Belt)
+    { id: "ang-cctv1", lat: 20.8350, lng: 85.1500, type: "cctv", title: "Angul Bus Stand CCTV", description: "Monitored Transport Hub" },
+    { id: "ang-light1", lat: 20.8400, lng: 85.1600, type: "lighting", title: "NH55 Bypass Lighting", description: "Highway Safety Lighting" },
+    { id: "ang-pol1", lat: 20.8300, lng: 85.1400, type: "police", title: "Angul Town PS", description: "Industrial Area Security" },
+    { id: "tal-trans1", lat: 20.9500, lng: 85.2200, type: "transport", title: "Talcher Railway Station", description: "Key Coal Transport Hub" },
+    { id: "tal-risk1", lat: 20.9600, lng: 85.2300, type: "moderate", title: "Coal Transport Route", description: "Heavy Truck Traffic Caution" },
+
+    // Paradeep (Coastal/Port)
+    { id: "para-cctv1", lat: 20.2600, lng: 86.6600, type: "cctv", title: "Paradeep Port Gate 1", description: "High Security Port Entry" },
+    { id: "para-safe1", lat: 20.2700, lng: 86.6500, type: "safespace", title: "Nehru Bangla Park", description: "Secured Public Park" },
+    { id: "para-light1", lat: 20.2500, lng: 86.6700, type: "lighting", title: "Sea Beach Road", description: "Illuminated Coastal Road" },
+    { id: "para-hosp1", lat: 20.2800, lng: 86.6400, type: "hospital", title: "Atharbanki Hospital", description: "Port Trust Hospital" },
+
+    // Gopalpur (South West Coast)
+    { id: "gpl-safe1", lat: 19.2600, lng: 84.9100, type: "safe", title: "Gopalpur Beach Main", description: "Life Guard Protected Zone" },
+    { id: "gpl-inc1", lat: 19.2550, lng: 84.9050, type: "incident", title: "Rough Sea Alert", description: "Live: Swimming Prohibited" },
+    { id: "gpl-light1", lat: 19.2650, lng: 84.9000, type: "lighting", title: "Light House Road", description: "Tourist Pathway Lighting" },
+
+    // Koraput & Jeypore (Tribal/Hilly)
+    { id: "kor-pol1", lat: 18.8100, lng: 82.7100, type: "police", title: "Koraput Town PS", description: "District HQ Security" },
+    { id: "kor-hosp1", lat: 18.8200, lng: 82.7200, type: "hospital", title: "SLN Medical College", description: "Major Tribal Area Hospital" },
+    { id: "jey-trans1", lat: 18.8600, lng: 82.5800, type: "transport", title: "Jeypore Bus Stand", description: "Regional Transport Hub" },
+    { id: "jey-risk1", lat: 18.8500, lng: 82.5700, type: "moderate", title: "Ghat Road Section", description: "Sharp Turns and Fog Caution" },
 
     // Madhya Pradesh Deep Dive
     { id: "mp3", lat: 22.7196, lng: 75.8577, type: "safe", title: "Vijay Nagar Indore", description: "Modern and secured residential hub" },

@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, orderBy, type DocumentData, type Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { seedCommunityReports } from "@/lib/seedReports";
 
 const CommunityReportsDemo = () => {
     const [reports, setReports] = useState<Array<{
@@ -23,7 +24,7 @@ const CommunityReportsDemo = () => {
                 const incidentType = typeof data.incidentType === "string" ? data.incidentType : "Report";
                 const location = typeof data.location === "string" ? data.location : "Unknown";
                 const sevRaw = typeof data.severity === "string" ? data.severity : "low";
-                const severity = ["low","medium","high","critical"].includes(sevRaw) ? (sevRaw as "low"|"medium"|"high"|"critical") : "low";
+                const severity = ["low", "medium", "high", "critical"].includes(sevRaw) ? (sevRaw as "low" | "medium" | "high" | "critical") : "low";
                 const createdAt = (data.createdAt ?? null) as Timestamp | null;
                 return {
                     id: doc.id,
@@ -90,35 +91,48 @@ const CommunityReportsDemo = () => {
                     const icon = getIconForType(report.incidentType);
                     const { color, bg } = getColorsForSeverity(report.severity);
                     return (
-                    <motion.div
-                        key={report.id ?? i}
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="flex gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors border shadow-sm"
-                    >
-                        <div className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center shrink-0`}>
-                            <icon className={`w-5 h-5 ${color}`} />
-                        </div>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                                <h4 className="font-medium text-sm">{report.incidentType}</h4>
-                                <span className="text-[10px] text-muted-foreground">{timeAgo(report.createdAt ?? null)}</span>
+                        <motion.div
+                            key={report.id ?? i}
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.1 }}
+                            className="flex gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors border shadow-sm"
+                        >
+                            <div className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center shrink-0`}>
+                                <icon className={`w-5 h-5 ${color}`} />
                             </div>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                                <MapPin className="w-3 h-3" /> {report.location}
-                            </p>
-                        </div>
-                        <div className="flex flex-col items-center justify-center px-2 border-l">
-                            <ThumbsUp className="w-3 h-3 text-muted-foreground mb-1" />
-                            <span className="text-xs font-bold">0</span>
-                        </div>
-                    </motion.div>
-                )})}
+                            <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                    <h4 className="font-medium text-sm">{report.incidentType}</h4>
+                                    <span className="text-[10px] text-muted-foreground">{timeAgo(report.createdAt ?? null)}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                    <MapPin className="w-3 h-3" /> {report.location}
+                                </p>
+                            </div>
+                            <div className="flex flex-col items-center justify-center px-2 border-l">
+                                <ThumbsUp className="w-3 h-3 text-muted-foreground mb-1" />
+                                <span className="text-xs font-bold">0</span>
+                            </div>
+                        </motion.div>
+                    )
+                })}
             </div>
 
-            <div className="p-4 border-t bg-muted/10">
-                <Button className="w-full text-xs h-8" variant="outline">View All Reports</Button>
+            <div className="p-4 border-t bg-muted/10 flex gap-2">
+                <Button className="flex-1 text-xs h-8" variant="outline">View All</Button>
+                {reports.length === 0 && (
+                    <Button
+                        className="flex-1 text-xs h-8"
+                        variant="secondary"
+                        onClick={async () => {
+                            const success = await seedCommunityReports();
+                            if (success) alert("Test reports added!");
+                        }}
+                    >
+                        Seed Data
+                    </Button>
+                )}
             </div>
         </div>
     );

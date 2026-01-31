@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Share2, MapPin, CheckCircle2, Navigation, User } from "lucide-react";
+import { Share2, MapPin, CheckCircle2, Navigation, User, Battery, BatteryCharging, Gauge, ShieldCheck, AlertOctagon } from "lucide-react";
 import { toast } from "sonner";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -29,9 +29,13 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
     const [isSharing, setIsSharing] = useState(false);
     const [selected, setSelected] = useState<Set<number>>(new Set());
 
-    // Real geolocation state
+    // Real geolocation & Device state
     const [currentPos, setCurrentPos] = useState<[number, number] | null>(null);
     const [path, setPath] = useState<[number, number][]>([]);
+    const [speed, setSpeed] = useState<number>(0);
+    const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
+    const [isCharging, setIsCharging] = useState(false);
+
     const watchIdRef = useRef<number | null>(null);
     const tripDocIdRef = useRef<string | null>(null);
 
@@ -44,6 +48,19 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
             iconAnchor: [12, 41]
         });
         L.Marker.prototype.options.icon = DefaultIcon;
+
+        // Battery API
+        if ('getBattery' in navigator) {
+            (navigator as any).getBattery().then((battery: any) => {
+                const updateBattery = () => {
+                    setBatteryLevel(Math.round(battery.level * 100));
+                    setIsCharging(battery.charging);
+                };
+                updateBattery();
+                battery.addEventListener('levelchange', updateBattery);
+                battery.addEventListener('chargingchange', updateBattery);
+            });
+        }
     }, []);
 
     const stopSharing = useCallback(() => {
@@ -67,16 +84,18 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
             return;
         }
 
-        toast.loading("Acquiring GPS...");
+        toast.loading("Acquiring GPS & Device Stats...");
 
         navigator.geolocation.getCurrentPosition(async (position) => {
-            const { latitude, longitude } = position.coords;
+            const { latitude, longitude, speed: currentSpeed } = position.coords;
             const startPos: [number, number] = [latitude, longitude];
             setCurrentPos(startPos);
             setPath([startPos]);
             setIsSharing(true);
+            setSpeed(currentSpeed ? Math.round(currentSpeed * 3.6) : 0); // m/s to km/h
+
             toast.dismiss();
-            toast.success(`Trip started! Live location shared.`);
+            toast.success(`Trip started! Live stats shared.`);
 
             // Log to Firebase
             const contactsSelected = Array.from(selected).map((idx) => contacts[idx]?.phone).filter(Boolean) as string[];
@@ -84,7 +103,8 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                 const docRef = await logTripShareStart({
                     contacts: contactsSelected,
                     startLatitude: latitude,
-                    startLongitude: longitude
+                    startLongitude: longitude,
+                    batteryLevel: batteryLevel ?? undefined
                 });
                 tripDocIdRef.current = docRef.id;
             } catch (e) {
@@ -94,10 +114,13 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
             // Start Watch
             watchIdRef.current = navigator.geolocation.watchPosition(
                 async (pos) => {
-                    const { latitude, longitude } = pos.coords;
+                    const { latitude, longitude, speed: newSpeed } = pos.coords;
                     const newPos: [number, number] = [latitude, longitude];
+                    const speedKmh = newSpeed ? Math.round(newSpeed * 3.6) : 0;
+
                     setCurrentPos(newPos);
                     setPath(prev => [...prev, newPos]);
+                    setSpeed(speedKmh);
 
                     // Update Firestore
                     if (tripDocIdRef.current) {
@@ -106,10 +129,12 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                             await updateDoc(tripRef, {
                                 currentLatitude: latitude,
                                 currentLongitude: longitude,
-                                lastUpdated: new Date() // Firestore timestamp would be better but Date works for client update
+                                speed: speedKmh,
+                                batteryLevel: batteryLevel, // Update latest battery
+                                lastUpdated: new Date()
                             });
                         } catch (err) {
-                            console.error("Error updating location", err);
+                            console.error("Error updating trip stats", err);
                         }
                     }
                 },
@@ -130,7 +155,7 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
             toast.error("Please allow location access to share your trip.");
         });
 
-    }, [selected, contacts]);
+    }, [selected, contacts, batteryLevel]);
 
     // Cleanup
     useEffect(() => {
@@ -170,13 +195,13 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                     </div>
                     <div>
                         <h3 className="font-semibold text-lg">Trip Sharing</h3>
-                        <p className="text-xs text-muted-foreground">Real-time monitoring</p>
+                        <p className="text-xs text-muted-foreground">Advanced Monitoring</p>
                     </div>
                 </div>
 
                 <div className="flex-1 space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">Trusted Contacts (choose first)</label>
+                        <label className="text-sm font-medium text-muted-foreground">Trusted Contacts</label>
                         <div className="space-y-2">
                             {contacts.map((contact, i) => (
                                 <button
@@ -200,7 +225,6 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                                                     : selected.has(i) ? "Selected" : "Not selected"}
                                             </p>
                                         </div>
-                                        <p className="text-[10px] text-muted-foreground truncate">{contact.phone}</p>
                                     </div>
                                     <div className={`w-6 h-6 rounded-md border flex items-center justify-center ${selected.has(i) ? "bg-primary text-primary-foreground border-primary" : "bg-background"
                                         }`}>
@@ -215,7 +239,7 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                 <div className="mt-6">
                     {!isSharing ? (
                         <Button
-                            className="w-full gradient-bg shadow-glow hover:opacity-90"
+                            className="w-full gradient-bg shadow-glow hover:opacity-90 transition-all font-semibold"
                             onClick={handleStartTrip}
                         >
                             <Navigation className="w-4 h-4 mr-2" />
@@ -224,10 +248,11 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                     ) : (
                         <Button
                             variant="destructive"
-                            className="w-full"
+                            className="w-full shadow-red-glow animate-pulse-slow"
                             onClick={stopSharing}
                         >
-                            Stop Sharing
+                            <AlertOctagon className="w-4 h-4 mr-2" />
+                            Stop Emergency Sharing
                         </Button>
                     )}
                 </div>
@@ -241,7 +266,7 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
 
-                    {path.length > 0 && <Polyline positions={path} color="#ec4899" weight={4} opacity={0.8} />}
+                    {path.length > 0 && <Polyline positions={path} color="#ec4899" weight={5} opacity={0.8} dashArray="1, 10" />}
 
                     {currentPos && (
                         <>
@@ -249,8 +274,8 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                             <Marker position={currentPos}>
                                 <Popup>
                                     <div className="text-center">
-                                        <p className="font-bold text-sm">You are here</p>
-                                        <p className="text-xs text-muted-foreground">Live GPS</p>
+                                        <p className="font-bold text-sm">Active Location</p>
+                                        <p className="text-xs text-muted-foreground">Speed: {speed} km/h</p>
                                     </div>
                                 </Popup>
                             </Marker>
@@ -258,26 +283,44 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                     )}
                 </MapContainer>
 
-                {/* Live Status Overlay */}
+                {/* Advanced Info Overlay */}
                 <AnimatePresence>
                     {isSharing && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 20 }}
-                            className="absolute bottom-4 left-4 right-4 bg-background/90 backdrop-blur-md p-4 rounded-xl border shadow-lg z-[1000]"
+                            className="absolute bottom-4 left-4 right-4 z-[1000]"
                         >
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                    <div>
-                                        <p className="text-sm font-semibold">Live Location Active</p>
-                                        <p className="text-xs text-muted-foreground">Sharing with {selected.size} contacts</p>
-                                    </div>
+                            <div className="bg-background/95 backdrop-blur-xl p-4 rounded-xl border-t-4 border-primary shadow-2xl grid grid-cols-3 gap-4">
+                                {/* Status */}
+                                <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                                    <ShieldCheck className="w-6 h-6 text-green-600 mb-1" />
+                                    <span className="text-[10px] uppercase font-bold text-muted-foreground">Status</span>
+                                    <span className="text-sm font-bold text-green-700">Monitored</span>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-xs font-medium text-primary">GPS</p>
-                                    <p className="text-sm font-bold">Active</p>
+
+                                {/* Speed */}
+                                <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-muted/50 border">
+                                    <Gauge className="w-6 h-6 text-primary mb-1" />
+                                    <span className="text-[10px] uppercase font-bold text-muted-foreground">Speed</span>
+                                    <span className="text-sm font-bold">{speed} <span className="text-[10px] font-normal">km/h</span></span>
+                                </div>
+
+                                {/* Battery */}
+                                <div className={`flex flex-col items-center justify-center p-2 rounded-lg border ${(batteryLevel !== null && batteryLevel < 20) ? "bg-red-500/10 border-red-500/20" : "bg-muted/50"
+                                    }`}>
+                                    {isCharging ? (
+                                        <BatteryCharging className="w-6 h-6 text-green-600 mb-1" />
+                                    ) : (
+                                        <Battery className={`w-6 h-6 mb-1 ${(batteryLevel !== null && batteryLevel < 20) ? "text-red-500" : "text-foreground"
+                                            }`} />
+                                    )}
+                                    <span className="text-[10px] uppercase font-bold text-muted-foreground">Battery</span>
+                                    <span className={`text-sm font-bold ${(batteryLevel !== null && batteryLevel < 20) ? "text-red-600" : ""
+                                        }`}>
+                                        {batteryLevel !== null ? `${batteryLevel}%` : "--"}
+                                    </span>
                                 </div>
                             </div>
                         </motion.div>

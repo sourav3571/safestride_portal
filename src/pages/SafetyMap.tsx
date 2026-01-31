@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, MapPin, AlertTriangle, Shield, Building2, Heart, ChevronLeft, ChevronRight, Maximize2, Navigation, Navigation2, Info, Clock, Route } from "lucide-react";
+import { Search, Filter, MapPin, AlertTriangle, Shield, Building2, Heart, ChevronLeft, ChevronRight, Maximize2, Navigation, Navigation2, Info, Clock, Route, Video, Lightbulb, Bus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MapboxComponent from "@/components/MapboxComponent";
@@ -16,6 +16,9 @@ const legendItems = [
   { type: "police" as const, icon: Building2, label: "Police Station" },
   { type: "hospital" as const, icon: Heart, label: "Hospital" },
   { type: "safespace" as const, icon: MapPin, label: "Safe Space" },
+  { type: "cctv" as const, icon: Video, label: "CCTV Zone" },
+  { type: "lighting" as const, icon: Lightbulb, label: "Well Lit Path" },
+  { type: "transport" as const, icon: Bus, label: "Public Transport" },
 ];
 
 const SafetyMap = () => {
@@ -97,7 +100,9 @@ const SafetyMap = () => {
         "palur hills": { lat: 19.2535, lng: 84.8150 },
         "pallur hills": { lat: 19.2535, lng: 84.8150 },
         "mkcg": { lat: 19.3106, lng: 84.8055 },
-        "gopalpur": { lat: 19.2586, lng: 84.9052 }
+        "gopalpur": { lat: 19.2586, lng: 84.9052 },
+        "chatrapur": { lat: 19.3549, lng: 84.9867 },
+        "chhatrapur": { lat: 19.3549, lng: 84.9867 }
       };
       const key = query.toLowerCase().trim();
       const token = import.meta.env.VITE_MAPBOX_API_KEY as string | undefined;
@@ -164,11 +169,34 @@ const SafetyMap = () => {
         return;
       }
       try {
+        // Standard call
         const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${start.lng},${start.lat};${end.lng},${end.lat}?alternatives=true&overview=full&geometries=geojson&access_token=${token}`;
         const res = await fetch(url);
         const data = await res.json();
-        if (data && data.routes && data.routes.length > 0) {
-          const options = data.routes.map((r: any) => {
+
+        let allRoutes = data.routes || [];
+
+        // SPECIAL CASE: Force alternative for Berhampur <> Chatrapur if only 1 route found
+        const isBAM_CAP = (source.toLowerCase().includes("berhampur") || source.toLowerCase().includes("brahmapur")) &&
+          (destination.toLowerCase().includes("chatrapur") || destination.toLowerCase().includes("chhatrapur"));
+
+        if (isBAM_CAP && allRoutes.length < 2) {
+          // Fetch via Gopalpur (approx lat/lng for Gopalpur: 19.26, 84.90)
+          // We can use the hardcoded one or just numeric
+          const viaLng = 84.9052;
+          const viaLat = 19.2586;
+          const altUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${start.lng},${start.lat};${viaLng},${viaLat};${end.lng},${end.lat}?overview=full&geometries=geojson&access_token=${token}`;
+          try {
+            const altRes = await fetch(altUrl);
+            const altData = await altRes.json();
+            if (altData.routes && altData.routes.length > 0) {
+              allRoutes.push(altData.routes[0]);
+            }
+          } catch (e) { console.error("Failed to fetch alt route", e); }
+        }
+
+        if (allRoutes.length > 0) {
+          const options = allRoutes.map((r: any) => {
             const coords = r.geometry.coordinates as [number, number][];
             const s = calculateSafetyScore(coords);
             return {
@@ -184,7 +212,7 @@ const SafetyMap = () => {
           }
           setSelectedRouteIndex(bestIndex);
           setRouteData(options[bestIndex]);
-          const routesToRender = data.routes.map((r: any, idx: number) => {
+          const routesToRender = allRoutes.map((r: any, idx: number) => {
             const coords = r.geometry.coordinates as [number, number][];
             const color = getColorForScore(options[idx].score);
             return {

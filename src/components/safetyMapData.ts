@@ -2,7 +2,7 @@ export interface MapMarker {
     id: string;
     lat: number;
     lng: number;
-    type: "safe" | "moderate" | "incident" | "police" | "hospital" | "safespace";
+    type: "safe" | "moderate" | "incident" | "police" | "hospital" | "safespace" | "cctv" | "lighting" | "transport";
     title: string;
     description?: string;
 }
@@ -14,6 +14,9 @@ export const markerColors = {
     police: "#3B82F6",
     hospital: "#EF4444",
     safespace: "#8B5CF6",
+    cctv: "#64748b",
+    lighting: "#facc15",
+    transport: "#0ea5e9",
 };
 
 export const markerLabels = {
@@ -23,4 +26,7 @@ export const markerLabels = {
     police: "Police Station",
     hospital: "Hospital",
     safespace: "Safe Space",
+    cctv: "CCTV Zone",
+    lighting: "Well Lit Path",
+    transport: "Public Transport",
 };

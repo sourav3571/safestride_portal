@@ -1,8 +1,8 @@
 import { initializeApp } from "firebase/app";
-import { 
-  getFirestore, 
-  addDoc, 
-  collection, 
+import {
+  getFirestore,
+  addDoc,
+  collection,
   serverTimestamp,
   query,
   where,
@@ -61,7 +61,7 @@ export const getIncidentReports = async (filters?: {
   center?: { lat: number; lng: number };
 }): Promise<(IncidentReport & { id: string })[]> => {
   const constraints: QueryConstraint[] = [];
-  
+
   if (filters?.incidentType) {
     constraints.push(where("incidentType", "==", filters.incidentType));
   }
@@ -71,7 +71,7 @@ export const getIncidentReports = async (filters?: {
 
   const q = query(collection(db, "incidentReports"), ...constraints);
   const snapshot = await getDocs(q);
-  
+
   let reports = snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
@@ -139,7 +139,7 @@ export const getSafeZonesNearby = async (
 ): Promise<(SafeZone & { id: string })[]> => {
   const zones = await getSafeZones();
   const radiusInDegrees = radiusKm / 111;
-  
+
   return zones.filter(zone => {
     const distance = Math.sqrt(
       Math.pow(zone.latitude - latitude, 2) +
@@ -223,7 +223,7 @@ export const saveUserPreference = async (data: UserPreference) => {
 export const getUserPreference = async (userId: string): Promise<(UserPreference & { id: string }) | null> => {
   const q = query(collection(db, "userPreferences"), where("userId", "==", userId));
   const snapshot = await getDocs(q);
-  
+
   if (snapshot.empty) return null;
   const doc = snapshot.docs[0];
   return {
@@ -240,17 +240,21 @@ export type TripShare = {
   startedAt?: unknown;
   startLatitude?: number;
   startLongitude?: number;
+  batteryLevel?: number;
+  speed?: number;
 };
 
 export const logTripShareStart = async (data: {
   contacts: string[];
   startLatitude?: number;
   startLongitude?: number;
+  batteryLevel?: number;
 }) => {
   return addDoc(collection(db, "tripShares"), {
     contacts: data.contacts,
     startLatitude: data.startLatitude ?? null,
     startLongitude: data.startLongitude ?? null,
+    batteryLevel: data.batteryLevel ?? null,
     startedAt: serverTimestamp(),
   });
 };

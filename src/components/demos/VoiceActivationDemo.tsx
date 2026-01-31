@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, MessageSquare, Check, User } from "lucide-react";
@@ -13,51 +13,108 @@ const VoiceActivationDemo = ({ forceActive = false }: DemoProps) => {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
     const [alertStage, setAlertStage] = useState<'idle' | 'listening' | 'detected' | 'sent'>('idle');
+    const recognitionRef = useRef<any>(null);
 
-    // Simulate speech recognition for demo purposes
-    // In a real app, we'd use window.webkitSpeechRecognition
+    useEffect(() => {
+        // Initialize Speech Recognition
+        if (typeof window !== 'undefined') {
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+
+                recognition.onresult = (event: any) => {
+                    let finalTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                        } else {
+                            finalTranscript += event.results[i][0].transcript;
+                        }
+                    }
+                    const lower = finalTranscript.toLowerCase();
+                    setTranscript(finalTranscript);
+
+                    if (lower.includes("help") || lower.includes("save") || lower.includes("emergency")) {
+                        handleSafeWordDetected(finalTranscript);
+                    }
+                };
+
+                recognition.onerror = (event: any) => {
+                    console.error("Speech recognition error", event.error);
+                    if (event.error === 'not-allowed') {
+                        toast.error("Microphone access denied.");
+                        setIsListening(false);
+                    }
+                };
+
+                recognitionRef.current = recognition;
+            } else {
+                console.warn("Speech Recognition API not supported in this browser.");
+            }
+        }
+    }, []);
+
+    const handleSafeWordDetected = (word: string) => {
+        if (alertStage === 'detected' || alertStage === 'sent') return;
+        setAlertStage('detected');
+        // Stop listening potentially or keep listening? 
+        // Typically stop to process
+        if (recognitionRef.current) recognitionRef.current.stop();
+
+        setTimeout(() => {
+            setAlertStage('sent');
+            toast.success("Safe word detected! Guards notified.");
+        }, 1500);
+    };
+
     useEffect(() => {
         if (forceActive && !isListening) {
+            startListening();
+        } else if (!forceActive && isListening) {
+            stopListening();
+        }
+    }, [forceActive]);
+
+    const startListening = () => {
+        if (recognitionRef.current) {
+            try {
+                recognitionRef.current.start();
+                setIsListening(true);
+                setAlertStage('listening');
+                toast("Voice Safety Assistant Activated - Say 'Help'");
+            } catch (e) {
+                console.error(e); // Already started
+            }
+        } else {
+            // Fallback for no browser support
             setIsListening(true);
             setAlertStage('listening');
-            toast("Voice Safety Assistant Activated");
-        } else if (!forceActive && isListening) {
-            setIsListening(false);
-            setAlertStage('idle');
+            toast.warning("Browser doesn't support Voice API. Using Simulation.");
+            // Simulate detection in 3s
+            setTimeout(() => {
+                setTranscript("Simulated: Help Me!");
+                handleSafeWordDetected("Help Me!");
+            }, 3000);
         }
-    }, [forceActive, isListening]);
+    };
 
-    useEffect(() => {
-        let timeout: NodeJS.Timeout;
-
-        if (isListening && alertStage === 'listening') {
-            // Simulate hearing "Head" or safe word after 2 seconds
-            timeout = setTimeout(() => {
-                setTranscript("Help! Help me!");
-                setAlertStage('detected');
-            }, 2000);
+    const stopListening = () => {
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
         }
-
-        if (alertStage === 'detected') {
-            timeout = setTimeout(() => {
-                setAlertStage('sent');
-                toast.success("Safe word detected! Guards notified.");
-            }, 1500);
-        }
-
-        return () => clearTimeout(timeout);
-    }, [isListening, alertStage]);
+        setIsListening(false);
+        setAlertStage('idle');
+        setTranscript("");
+    };
 
     const toggleListening = () => {
         if (isListening) {
-            setIsListening(false);
-            setAlertStage('idle');
-            setTranscript("");
+            stopListening();
         } else {
-            setIsListening(true);
-            setAlertStage('listening');
-            setTranscript("");
-            toast("Listening for safe word 'Help'...");
+            startListening();
         }
     };
 
@@ -73,7 +130,9 @@ const VoiceActivationDemo = ({ forceActive = false }: DemoProps) => {
             <h3 className="text-xl font-bold mb-2">Voice Safety Assistant</h3>
             <p className="text-muted-foreground mb-8 min-h-[40px]">
                 {alertStage === 'idle' && "Tap microphone to activate background listening"}
-                {alertStage === 'listening' && "Listening for 'Help'..."}
+                {alertStage === 'listening' && (
+                    <span className="animate-pulse">Listening... {transcript && `"${transcript}"`}</span>
+                )}
                 {alertStage === 'detected' && <span className="text-red-500 font-bold">Detected: "{transcript}"</span>}
                 {alertStage === 'sent' && <span className="text-green-600 font-bold flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Alert Sent!</span>}
             </p>
@@ -112,6 +171,10 @@ const VoiceActivationDemo = ({ forceActive = false }: DemoProps) => {
             >
                 {isListening ? "Stop Listening" : "Start Voice Monitoring"}
             </Button>
+
+            <p className="text-xs text-muted-foreground mt-4">
+                Try saying <span className="font-bold text-foreground">"Help"</span>, <span className="font-bold text-foreground">"Save me"</span> or <span className="font-bold text-foreground">"Emergency"</span>
+            </p>
         </div>
     );
 };

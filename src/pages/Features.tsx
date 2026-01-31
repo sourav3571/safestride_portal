@@ -42,9 +42,9 @@ const features = [
   {
     icon: Share2,
     title: "Auto Trip Sharing",
-    description: "Share your journey with trusted contacts automatically. They receive real-time updates without you having to do anything after setup.",
+    description: "Choose who to share with first. When activated, live trip updates are automatically sent to all selected contacts.",
     details: [
-      "One-time setup for contacts",
+      "Choose contacts before activation",
       "Automatic trip detection",
       "Real-time location sharing",
       "ETA notifications to family",

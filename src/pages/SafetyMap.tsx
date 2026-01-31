@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, MapPin, AlertTriangle, Shield, Building2, Heart, ChevronLeft, ChevronRight, Maximize2, Navigation, Navigation2, Info, Clock, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SafetyMapComponent } from "@/components/SafetyMapComponent";
+import MapboxComponent from "@/components/MapboxComponent";
 import { markerColors } from "@/components/safetyMapData";
 import { indiaMarkers } from "@/components/indiaMarkersData";
+import { getIncidentReports, IncidentReport } from "@/lib/firebase";
 import { Link } from "react-router-dom";
 
 const legendItems = [
@@ -20,16 +21,59 @@ const legendItems = [
 const SafetyMap = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>(legendItems.map(l => l.type));
-  const [mapCenter, setMapCenter] = useState<[number, number]>([20.5937, 78.9629]);
-  const [mapZoom, setMapZoom] = useState(5);
+  const [mapCenter, setMapCenter] = useState({ lat: 19.314962, lng: 84.794090 });
+  const [mapZoom, setMapZoom] = useState(12);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<"filter" | "route">("filter");
+  const [firebaseIncidents, setFirebaseIncidents] = useState<IncidentReport[]>([]);
+  const [isLoadingIncidents, setIsLoadingIncidents] = useState(false);
 
   // Routing State
   const [source, setSource] = useState("");
   const [destination, setDestination] = useState("");
-  const [waypoints, setWaypoints] = useState<[number, number][] | undefined>(undefined);
+  const [waypoints, setWaypoints] = useState<{ lat: number; lng: number }[] | undefined>(undefined);
   const [routeData, setRouteData] = useState<{ score: number; distance: number; duration: number; verdict: string } | null>(null);
+  const [routeOptions, setRouteOptions] = useState<{ score: number; distance: number; duration: number; verdict: string }[] | null>(null);
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState<number | null>(null);
+  const [routesRender, setRoutesRender] = useState<Array<{ coordinates: [number, number][], color: string; width?: number; opacity?: number }>>([]);
+  const [startCoord, setStartCoord] = useState<{ lat: number; lng: number } | null>(null);
+  const [endCoord, setEndCoord] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Combine static markers with firebase incidents
+  const [combinedMarkers, setCombinedMarkers] = useState(indiaMarkers);
+
+  useEffect(() => {
+    if (firebaseIncidents.length > 0) {
+      const incidentMarkers = firebaseIncidents.map(inc => ({
+        id: inc.id || `inc-${Math.random()}`,
+        lat: inc.latitude,
+        lng: inc.longitude,
+        title: inc.incidentType,
+        type: "incident" as const, // Force type to match MapMarker type
+        description: inc.description || "Reported via Commmunity"
+      }));
+      // Merge unique
+      setCombinedMarkers([...indiaMarkers, ...incidentMarkers]);
+    } else {
+      setCombinedMarkers(indiaMarkers);
+    }
+  }, [firebaseIncidents]);
+
+  // Load Firebase incidents on mount
+  useEffect(() => {
+    const loadIncidents = async () => {
+      setIsLoadingIncidents(true);
+      try {
+        const incidents = await getIncidentReports();
+        setFirebaseIncidents(incidents);
+      } catch (error) {
+        console.warn("Could not load Firebase incidents:", error);
+      } finally {
+        setIsLoadingIncidents(false);
+      }
+    };
+    loadIncidents();
+  }, []);
 
   const toggleFilter = (type: string) => {
     setActiveFilters(prev =>
@@ -41,29 +85,69 @@ const SafetyMap = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const geocode = async (query: string): Promise<[number, number] | null> => {
+  const geocode = async (query: string): Promise<{ lat: number; lng: number } | null> => {
     try {
-      // 1. Check local city coords first
-      const cityCoords: { [key: string]: [number, number] } = {
-        "mumbai": [19.0760, 72.8777], "delhi": [28.6139, 77.2090], "bangalore": [12.9716, 77.5946],
-        "chennai": [13.0827, 80.2707], "kolkata": [22.5726, 88.3639], "hyderabad": [17.3850, 78.4867],
-        "pune": [18.5204, 73.8567], "kochi": [9.9312, 76.2673], "ahmedabad": [23.0225, 72.5714]
+      const local: { [key: string]: { lat: number; lng: number } } = {
+        "berhampur": { lat: 19.314962, lng: 84.794090 },
+        "brahmapur": { lat: 19.314962, lng: 84.794090 },
+        "nist": { lat: 19.2535, lng: 84.8150 },
+        "nist university": { lat: 19.2535, lng: 84.8150 },
+        "golanthara": { lat: 19.2500, lng: 84.8200 },
+        "golonthara": { lat: 19.2500, lng: 84.8200 },
+        "palur hills": { lat: 19.2535, lng: 84.8150 },
+        "pallur hills": { lat: 19.2535, lng: 84.8150 },
+        "mkcg": { lat: 19.3106, lng: 84.8055 },
+        "gopalpur": { lat: 19.2586, lng: 84.9052 }
       };
-      if (cityCoords[query.toLowerCase().trim()]) return cityCoords[query.toLowerCase().trim()];
+      const key = query.toLowerCase().trim();
+      const token = import.meta.env.VITE_MAPBOX_API_KEY as string | undefined;
+      if (token) {
+        const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query + ", Odisha, India")}.json?limit=1&country=IN&proximity=${mapCenter.lng},${mapCenter.lat}&access_token=${token}`);
+        const data = await res.json();
+        if (data && data.features && data.features.length > 0) {
+          const [lng, lat] = data.features[0].center;
+          return { lat, lng };
+        }
+      }
+      if (local[key]) return local[key];
 
-      // 2. Search in markers
-      const marker = indiaMarkers.find(m => m.title.toLowerCase().includes(query.toLowerCase()));
-      if (marker) return [marker.lat, marker.lng];
+      const marker = indiaMarkers.find(m => m.title.toLowerCase().includes(key));
+      if (marker) return { lat: marker.lat, lng: marker.lng };
 
-      // 3. Nominatim
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", India")}&limit=1`);
       const data = await res.json();
-      if (data && data.length > 0) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
       return null;
     } catch (e) {
       return null;
     }
   };
+
+  // Safety scoring based on nearby markers
+  const calculateSafetyScore = (coords: [number, number][]) => {
+    let score = 70;
+    const step = Math.max(1, Math.floor(coords.length / 50));
+    for (let i = 0; i < coords.length; i += step) {
+      const [lng, lat] = coords[i];
+      indiaMarkers.forEach((m) => {
+        const dist = Math.sqrt(Math.pow(lat - m.lat, 2) + Math.pow(lng - m.lng, 2));
+        if (dist < 0.005) {
+          if (["safe", "police", "hospital"].includes(m.type)) score += 0.5;
+          else if (m.type === "safespace") score += 1.5;
+          else if (m.type === "incident") score -= 5;
+          else if (m.type === "moderate") score -= 2;
+        }
+      });
+    }
+    score = Math.min(100, Math.max(10, Math.round(score)));
+    let verdict = "Highly Recommended";
+    if (score < 40) verdict = "High Risk - Use Major Roads Only";
+    else if (score < 60) verdict = "Caution - Avoid Late Night Travel";
+    else if (score < 80) verdict = "Safe Route - Well Monitored";
+    return { score, verdict };
+  };
+
+  const getColorForScore = (score: number) => (score > 80 ? "#10b981" : score > 50 ? "#f59e0b" : "#ef4444");
 
   const handleRouteSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +156,49 @@ const SafetyMap = () => {
     const start = await geocode(source);
     const end = await geocode(destination);
     if (start && end) {
-      setWaypoints([start, end]);
+      setStartCoord(start);
+      setEndCoord(end);
+      const token = import.meta.env.VITE_MAPBOX_API_KEY as string | undefined;
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${start.lng},${start.lat};${end.lng},${end.lat}?alternatives=true&overview=full&geometries=geojson&access_token=${token}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.routes && data.routes.length > 0) {
+          const options = data.routes.map((r: any) => {
+            const coords = r.geometry.coordinates as [number, number][];
+            const s = calculateSafetyScore(coords);
+            return {
+              ...s,
+              distance: r.distance / 1000,
+              duration: r.duration / 60,
+            };
+          });
+          setRouteOptions(options);
+          let bestIndex = 0;
+          for (let i = 1; i < options.length; i++) {
+            if (options[i].score > options[bestIndex].score) bestIndex = i;
+          }
+          setSelectedRouteIndex(bestIndex);
+          setRouteData(options[bestIndex]);
+          const routesToRender = data.routes.map((r: any, idx: number) => {
+            const coords = r.geometry.coordinates as [number, number][];
+            const color = getColorForScore(options[idx].score);
+            return {
+              coordinates: coords,
+              color,
+              width: idx === bestIndex ? 6 : 4,
+              opacity: idx === bestIndex ? 0.9 : 0.7,
+            };
+          });
+          setRoutesRender(routesToRender);
+        }
+      } catch (err) {
+        // ignore for now, UI will remain unchanged
+      }
     }
     setIsLoading(false);
   };
@@ -93,8 +219,13 @@ const SafetyMap = () => {
   const clearRoute = () => {
     setWaypoints(undefined);
     setRouteData(null);
+    setRouteOptions(null);
+    setSelectedRouteIndex(null);
+    setRoutesRender([]);
     setSource("");
     setDestination("");
+    setStartCoord(null);
+    setEndCoord(null);
   };
 
   return (
@@ -190,7 +321,7 @@ const SafetyMap = () => {
                         <h2 className="text-lg font-bold tracking-tight text-foreground mb-3 font-display">Safest Route</h2>
                         <form onSubmit={handleRouteSearch} className="space-y-3">
                           <div className="relative">
-                            <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base">📍</span>
                             <Input
                               placeholder="Starting point..."
                               value={source}
@@ -199,7 +330,7 @@ const SafetyMap = () => {
                             />
                           </div>
                           <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-500" />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base">🏁</span>
                             <Input
                               placeholder="Destination..."
                               value={destination}
@@ -222,7 +353,58 @@ const SafetyMap = () => {
                         </form>
                       </div>
 
-                      {/* Route Score Results */}
+                      {/* Route Options and Scores */}
+                      {routeOptions && routeOptions.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-4 rounded-2xl bg-white border border-primary/10 shadow-lg space-y-4"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Shield className="w-5 h-5 text-primary" />
+                            <span className="font-bold text-foreground">Route Safety Comparison</span>
+                          </div>
+
+                          <div className="grid gap-3">
+                            {routeOptions.map((opt, idx) => {
+                              const tag = String.fromCharCode(65 + idx); // A, B, C...
+                              const isSelected = selectedRouteIndex === idx;
+                              return (
+                                <button
+                                  key={idx}
+                                  onClick={() => {
+                                    setSelectedRouteIndex(idx);
+                                    setRouteData(opt);
+                                  }}
+                                  className={`w-full text-left p-3 rounded-xl border transition-all ${isSelected ? "border-primary bg-primary/5" : "border-muted bg-muted/30 hover:bg-muted/50"}`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-primary/10 text-primary">Route {tag}</span>
+                                      <span className="text-sm font-semibold text-foreground">{opt.verdict}</span>
+                                    </div>
+                                    <div className={`px-3 py-1 rounded-full text-xs font-bold ${opt.score > 80 ? "bg-emerald-100 text-emerald-700" :
+                                      opt.score > 50 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
+                                      }`}>
+                                      {opt.score}%
+                                    </div>
+                                  </div>
+                                  <div className="mt-2 text-xs text-muted-foreground flex items-center gap-4">
+                                    <span className="flex items-center gap-1">
+                                      <Route className="w-3 h-3" /> {opt.distance.toFixed(1)} km
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3" /> {Math.round(opt.duration)} min
+                                    </span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Selected Route Summary */}
                       {routeData && (
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
@@ -235,7 +417,7 @@ const SafetyMap = () => {
                               <span className="font-bold text-foreground">Safety Score</span>
                             </div>
                             <div className={`px-3 py-1 rounded-full text-xs font-bold ${routeData.score > 80 ? "bg-emerald-100 text-emerald-700" :
-                                routeData.score > 50 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
+                              routeData.score > 50 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
                               }`}>
                               {routeData.score}%
                             </div>
@@ -309,14 +491,22 @@ const SafetyMap = () => {
 
         {/* Map */}
         <div className="flex-1 relative h-full">
-          <SafetyMapComponent
+          <MapboxComponent
             className="h-full w-full rounded-none"
+            markers={combinedMarkers}
             activeFilters={activeFilters}
             center={mapCenter}
             zoom={mapZoom}
-            waypoints={waypoints}
-            onRouteUpdate={setRouteData}
+            routes={routesRender}
+            startMarker={startCoord}
+            endMarker={endCoord}
           />
+          {isLoadingIncidents && (
+            <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 bg-white/90 rounded-lg shadow-sm">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <span className="text-xs text-gray-600">Loading incidents...</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

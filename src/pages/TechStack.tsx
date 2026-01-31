@@ -1,73 +1,33 @@
 import { motion } from "framer-motion";
-import { Shield, Code, Cloud, Map, Sparkles, Database, Mail, Globe, Cpu, Zap } from "lucide-react";
+import { Shield, Code, Sparkles, Database } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const technologies = [
-    {
-        icon: Sparkles,
-        name: "AI - Gemini",
-        category: "AI",
-        description: "Powers our Safety Assistant chatbot with natural language understanding and contextual safety advice.",
-        features: ["Real-time chat support", "Safety tips generation", "Emergency guidance"],
-        color: "from-purple-500 to-pink-500",
-    },
-    {
-        icon: Cpu,
-        name: "AI - Vertex AI",
-        category: "AI",
-        description: "Advanced machine learning for safety score predictions and route analysis.",
-        features: ["Safety score algorithm", "Predictive analytics", "Pattern recognition"],
-        color: "from-blue-500 to-cyan-500",
-    },
-    {
-        icon: Zap,
-        name: "Build with AI",
-        category: "AI",
-        description: "AI-powered features throughout the application for enhanced user safety.",
-        features: ["Smart route selection", "Incident prediction", "Personalized recommendations"],
-        color: "from-yellow-500 to-orange-500",
-    },
-    {
-        icon: Database,
-        name: "Firebase",
-        category: "Backend",
-        description: "Real-time database and authentication for secure incident reporting and user management.",
-        features: ["Firestore database", "Real-time sync", "Secure authentication"],
-        color: "from-orange-500 to-red-500",
-    },
-    {
-        icon: Cloud,
-        name: "Google Cloud",
-        category: "Infrastructure",
-        description: "Scalable cloud infrastructure powering SafeStride's backend services.",
-        features: ["Cloud hosting", "API management", "Data storage"],
-        color: "from-indigo-500 to-purple-500",
-    },
-    {
-        icon: Map,
-        name: "Google Maps Platform",
-        category: "Mapping",
-        description: "Location services and mapping capabilities for route visualization and geocoding.",
-        features: ["Geocoding API", "Places API", "Directions API"],
-        color: "from-green-500 to-emerald-500",
-    },
-    {
-        icon: Mail,
-        name: "Google Workspace",
-        category: "Integration",
-        description: "Integration with Google services for enhanced collaboration and notifications.",
-        features: ["Calendar integration", "Email notifications", "Document sharing"],
-        color: "from-red-500 to-pink-500",
-    },
-    {
-        icon: Globe,
-        name: "Web Platform",
-        category: "Frontend",
-        description: "Modern Progressive Web App built with React, TypeScript, and cutting-edge web technologies.",
-        features: ["Responsive design", "Offline support", "Fast performance"],
-        color: "from-teal-500 to-blue-500",
-    },
+  {
+    icon: Sparkles,
+    name: "Gemini Model",
+    category: "AI",
+    description: "Core LLM powering Safety Assistant and intelligent features.",
+    features: ["Real-time chat", "Contextual guidance", "Safety tips"],
+    color: "from-purple-500 to-pink-500",
+  },
+  {
+    icon: Code,
+    name: "Gemini AI Studio",
+    category: "AI",
+    description: "Model management and prompt design for production-ready AI flows.",
+    features: ["Prompt tuning", "Model orchestration", "Evaluation tools"],
+    color: "from-blue-500 to-cyan-500",
+  },
+  {
+    icon: Database,
+    name: "Firebase",
+    category: "Backend",
+    description: "Realtime database and auth for reports and SOS telemetry.",
+    features: ["Firestore", "Realtime sync", "Secure auth"],
+    color: "from-orange-500 to-red-500",
+  },
 ];
 
 const TechStack = () => {
@@ -154,26 +114,26 @@ const TechStack = () => {
                             How It All Works Together
                         </h2>
                         <p className="text-muted-foreground max-w-2xl mx-auto">
-                            Our technology stack is carefully designed to provide a seamless, secure, and intelligent safety experience.
+                            Focused stack for seamless, secure, and intelligent safety features.
                         </p>
                     </motion.div>
 
                     <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                         {[
                             {
-                                title: "AI Layer",
-                                description: "Gemini and Vertex AI power intelligent features like the Safety Assistant and route scoring.",
+                                title: "Gemini Model",
+                                description: "LLM powering chat, safety advice, and intelligent UX.",
                                 icon: Sparkles,
                             },
                             {
-                                title: "Backend Layer",
-                                description: "Firebase and Google Cloud provide secure, scalable infrastructure for data and authentication.",
-                                icon: Database,
+                                title: "Gemini AI Studio",
+                                description: "Manages prompts and model configurations for production flows.",
+                                icon: Code,
                             },
                             {
-                                title: "Frontend Layer",
-                                description: "Modern web technologies deliver a fast, responsive experience across all devices.",
-                                icon: Globe,
+                                title: "Firebase",
+                                description: "Persists incident reports and SOS logs securely.",
+                                icon: Database,
                             },
                         ].map((layer, i) => (
                             <motion.div

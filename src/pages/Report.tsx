@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { saveIncidentReport } from "@/lib/firebase";
 
 const Report = () => {
   const incidentTypes = [
@@ -32,17 +33,26 @@ const Report = () => {
     description: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Simulate submission
-    setTimeout(() => {
+    try {
+      await saveIncidentReport({
+        location: formData.location,
+        incidentType: formData.incidentType,
+        description: formData.description,
+        isAnonymous,
+      });
       setIsSubmitted(true);
       toast({
         title: "Report Submitted",
         description: "Thank you for helping keep others safe!",
       });
-    }, 1000);
+    } catch {
+      toast({
+        title: "Submission Failed",
+        description: "Please try again later.",
+      });
+    }
   };
 
   if (isSubmitted) {

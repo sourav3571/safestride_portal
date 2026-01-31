@@ -38,7 +38,7 @@ const ShakeSOSDemo = ({ forceActive = false }: DemoProps) => {
             // Optional reset
             cancelSOS();
         }
-    }, [forceActive]);
+    }, [forceActive, isTriggered]);
 
     const handleShake = () => {
         if (isTriggered) return;

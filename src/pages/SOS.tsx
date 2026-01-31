@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, PhoneCall, AlertTriangle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { logSOSAction } from "@/lib/firebase";
+import { toast } from "sonner";
 
 const emergencyNumbers = [
   { name: "Women Helpline", number: "1091", color: "bg-primary" },
@@ -14,26 +16,52 @@ const emergencyNumbers = [
 const SOS = () => {
   const [isPressed, setIsPressed] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
-  const [showNumbers, setShowNumbers] = useState(false);
+  const [showNumbers, setShowNumbers] = useState(true);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isPressed) {
-      interval = setInterval(() => {
-        setHoldProgress((prev) => {
-          if (prev >= 100) {
+    // Shake detection logic
+    let lastX = 0, lastY = 0, lastZ = 0;
+    let lastTime = 0;
+    const SHAKE_THRESHOLD = 15;
+
+    const handleMotion = (e: DeviceMotionEvent) => {
+      const current = e.accelerationIncludingGravity;
+      if (!current) return;
+
+      const { x, y, z } = current;
+      const now = Date.now();
+
+      if ((now - lastTime) > 100) {
+        const diffTime = (now - lastTime);
+        lastTime = now;
+
+        const speed = Math.abs((x || 0) + (y || 0) + (z || 0) - lastX - lastY - lastZ) / diffTime * 10000;
+
+        if (speed > SHAKE_THRESHOLD) {
+          // Shake detected
+          if (!isPressed) {
+            setIsPressed(true);
             setShowNumbers(true);
-            return 100;
+            logSOSAction({ type: "ACTIVATED", label: "Shake Detected" });
+            toast.error("SOS SHAKE DETECTED! Calling emergency services...");
           }
-          return prev + 3.33; // 3 seconds total
-        });
-      }, 100);
-    } else {
-      setHoldProgress(0);
+        }
+
+        lastX = x || 0;
+        lastY = y || 0;
+        lastZ = z || 0;
+      }
+    };
+
+    if (typeof window !== 'undefined' && window.DeviceMotionEvent) {
+      window.addEventListener('devicemotion', handleMotion);
     }
 
-    return () => clearInterval(interval);
+    return () => {
+      if (typeof window !== 'undefined' && window.DeviceMotionEvent) {
+        window.removeEventListener('devicemotion', handleMotion);
+      }
+    };
   }, [isPressed]);
 
   return (
@@ -48,71 +76,56 @@ const SOS = () => {
             <AlertTriangle className="w-4 h-4" />
             Emergency Access
           </div>
-          
+
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-heading mb-4">
             Need Help <span className="text-destructive">Right Now</span>?
           </h1>
-          
+
           <p className="text-muted-foreground mb-12">
             Press and hold the SOS button for 3 seconds, or tap any emergency number below to call directly.
           </p>
 
-          {/* SOS Button */}
+          {/* SOS Shake Trigger */}
           <div className="relative mb-12">
-            <motion.button
-              onMouseDown={() => setIsPressed(true)}
-              onMouseUp={() => setIsPressed(false)}
-              onMouseLeave={() => setIsPressed(false)}
-              onTouchStart={() => setIsPressed(true)}
-              onTouchEnd={() => setIsPressed(false)}
-              whileTap={{ scale: 0.95 }}
-              className="relative w-48 h-48 mx-auto rounded-full bg-destructive text-destructive-foreground font-bold text-2xl shadow-xl flex items-center justify-center overflow-hidden"
+            <motion.div
+              animate={{
+                rotate: [0, -10, 10, -10, 10, 0],
+              }}
+              transition={{
+                duration: 0.5,
+                repeat: Infinity,
+                repeatDelay: 2
+              }}
+              className="relative w-48 h-48 mx-auto rounded-full bg-destructive text-destructive-foreground font-bold text-2xl shadow-xl flex items-center justify-center overflow-hidden cursor-pointer"
+              onClick={() => {
+                // Fallback for desktop testing
+                toast.warning("Simulated Shake Triggered");
+                setShowNumbers(true);
+                setIsPressed(true);
+                logSOSAction({ type: "ACTIVATED", label: "Shake Generated" });
+              }}
             >
-              {/* Progress ring */}
-              <svg className="absolute inset-0 w-full h-full -rotate-90">
-                <circle
-                  cx="96"
-                  cy="96"
-                  r="92"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.2)"
-                  strokeWidth="8"
-                />
-                <motion.circle
-                  cx="96"
-                  cy="96"
-                  r="92"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  strokeDasharray={578}
-                  strokeDashoffset={578 - (578 * holdProgress) / 100}
-                  transition={{ duration: 0.1 }}
-                />
-              </svg>
-              
-              {/* Pulse animation */}
+              {/* Ripple effect */}
               <motion.div
-                className="absolute inset-0 rounded-full bg-destructive"
-                animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 rounded-full bg-white/20"
+                animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
               />
-              
+
               <div className="relative z-10 flex flex-col items-center">
                 <Phone className="w-12 h-12 mb-2" />
-                <span>SOS</span>
+                <span className="text-center text-lg leading-tight">SHAKE<br />Device</span>
               </div>
-            </motion.button>
-            
+            </motion.div>
+
             <p className="text-sm text-muted-foreground mt-4">
-              Hold for 3 seconds
+              Shake your phone vigorously to activate SOS <br /> (or click circle to simulate)
             </p>
           </div>
 
           {/* Emergency Numbers */}
           <AnimatePresence>
-            {(showNumbers || true) && (
+            {showNumbers && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -121,11 +134,12 @@ const SOS = () => {
                 <h2 className="text-lg font-semibold text-foreground mb-4">
                   Emergency Numbers
                 </h2>
-                
+
                 {emergencyNumbers.map((item, i) => (
                   <motion.a
                     key={item.number}
                     href={`tel:${item.number}`}
+                    onClick={() => logSOSAction({ type: "CLICK_NUMBER", label: item.name, number: item.number })}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
@@ -158,7 +172,7 @@ const SOS = () => {
               Get Full SOS Features
             </h3>
             <p className="text-sm text-muted-foreground">
-              Download the SafeStride app for shake-to-SOS, voice activation, 
+              Download the SafeStride app for shake-to-SOS, voice activation,
               automatic location sharing, and more.
             </p>
           </motion.div>

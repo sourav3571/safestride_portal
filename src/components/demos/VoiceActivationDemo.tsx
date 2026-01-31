@@ -25,7 +25,7 @@ const VoiceActivationDemo = ({ forceActive = false }: DemoProps) => {
             setIsListening(false);
             setAlertStage('idle');
         }
-    }, [forceActive]);
+    }, [forceActive, isListening]);
 
     useEffect(() => {
         let timeout: NodeJS.Timeout;

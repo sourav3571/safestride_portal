@@ -17,7 +17,7 @@ interface SafetyMapComponentProps {
   className?: string;
   activeFilters?: string[];
   waypoints?: [number, number][]; // [lat, lng][]
-  onRouteUpdate?: (data: { score: number; distance: number; duration: number; verdict: string }) => void;
+  onRoutesUpdate?: (routes: { score: number; distance: number; duration: number; verdict: string }[]) => void;
 }
 
 const markerIcons = {
@@ -65,7 +65,7 @@ const SafetyMapComponent = ({
   className = "h-[600px] w-full",
   activeFilters = ["safe", "moderate", "incident", "police", "hospital", "safespace"],
   waypoints,
-  onRouteUpdate
+  onRoutesUpdate
 }: SafetyMapComponentProps) => {
   const unfilteredMarkers = markers || indiaMarkers;
   const mapRef = useRef<HTMLDivElement>(null);
@@ -177,22 +177,29 @@ const SafetyMapComponent = ({
           extendToWaypoints: true,
           missingRouteTolerance: 10
         },
+        showAlternatives: true,
+        altLineStyles: [
+          { color: '#f59e0b', weight: 5, opacity: 0.7 },
+          { color: '#ef4444', weight: 5, opacity: 0.6 }
+        ],
         createMarker: () => null, // Hide default routing markers
         addWaypoints: false,
         routeWhileDragging: false,
         // @ts-ignore
         show: false // Hide default description panel
       }).on('routesfound', (e: any) => {
-        const route = e.routes[0];
-        const { score, verdict } = calculateSafetyScore(route.coordinates);
-
-        if (onRouteUpdate) {
-          onRouteUpdate({
+        const results = e.routes.map((route: any) => {
+          const { score, verdict } = calculateSafetyScore(route.coordinates);
+          return {
             score,
             verdict,
             distance: route.summary.totalDistance / 1000,
             duration: route.summary.totalTime / 60
-          });
+          };
+        });
+
+        if (onRoutesUpdate) {
+          onRoutesUpdate(results);
         }
       }).addTo(mapInstanceRef.current!);
     }

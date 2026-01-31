@@ -32,15 +32,9 @@ const values = [
 ];
 
 const themes = [
-  { name: "AI", type: "tech" },
-  { name: "AI - Gemini", type: "tech" },
-  { name: "AI - Vertex AI", type: "tech" },
-  { name: "Build with AI", type: "tech" },
+  { name: "Gemini Model", type: "tech" },
+  { name: "Gemini AI Studio", type: "tech" },
   { name: "Firebase", type: "tech" },
-  { name: "Google Cloud", type: "tech" },
-  { name: "Google Maps Platform", type: "tech" },
-  { name: "Google Workspace", type: "tech" },
-  { name: "Web", type: "tech" },
 ];
 
 const About = () => {
@@ -278,10 +272,10 @@ const About = () => {
               Have questions, feedback, or want to partner with us? We'd love to hear from you.
             </p>
             <a
-              href="mailto:hello@safestride.app"
+              href="mailto:sourav.behera.cst.2023@nist.edu"
               className="text-primary font-medium hover:underline"
             >
-              hello@safestride.app
+              sourav.behera.cst.2023@nist.edu
             </a>
           </motion.div>
         </div>

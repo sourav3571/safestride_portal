@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,6 +7,8 @@ import { Share2, MapPin, CheckCircle2, Navigation, User } from "lucide-react";
 import { toast } from "sonner";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { logTripShareStart, db } from "@/lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
 
 // Fix Leaflet marker icons by using online sources to avoid build issues with image imports
 const iconUrl = "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png";
@@ -18,21 +20,20 @@ interface DemoProps {
 }
 
 const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
-    const contacts = [
-        { name: "Mom", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mom", status: "Watching" },
-        { name: "Rahul (Brother)", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul", status: "Notified" },
-        { name: "Priya (Friend)", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya", status: "Online" },
-    ];
+    const contacts = useMemo(() => ([
+        { name: "Mom", phone: "+919876543210", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mom", status: "Watching" },
+        { name: "Rahul (Brother)", phone: "+919812345678", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul", status: "Notified" },
+        { name: "Priya (Friend)", phone: "+919700000000", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya", status: "Online" },
+    ]), []);
 
-    const route = [
-        [28.6139, 77.2090], // New Delhi
-        [28.6129, 77.2110],
-        [28.6119, 77.2130],
-        [28.6109, 77.2150],
-        [28.6100, 77.2170], // Destination
-    ];
     const [isSharing, setIsSharing] = useState(false);
-    const [currentPos, setCurrentPos] = useState(0);
+    const [selected, setSelected] = useState<Set<number>>(new Set());
+
+    // Real geolocation state
+    const [currentPos, setCurrentPos] = useState<[number, number] | null>(null);
+    const [path, setPath] = useState<[number, number][]>([]);
+    const watchIdRef = useRef<number | null>(null);
+    const tripDocIdRef = useRef<string | null>(null);
 
     // Fix Leaflet icon on mount
     useEffect(() => {
@@ -45,39 +46,118 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
         L.Marker.prototype.options.icon = DefaultIcon;
     }, []);
 
+    const stopSharing = useCallback(() => {
+        if (watchIdRef.current !== null) {
+            navigator.geolocation.clearWatch(watchIdRef.current);
+            watchIdRef.current = null;
+        }
+        setIsSharing(false);
+        tripDocIdRef.current = null;
+        toast.info("Trip sharing stopped.");
+    }, []);
+
+    const handleStartTrip = useCallback(async () => {
+        if (selected.size === 0) {
+            toast.info("Select contacts first, then activate trip sharing.");
+            return;
+        }
+
+        if (!("geolocation" in navigator)) {
+            toast.error("Geolocation is not supported by your browser.");
+            return;
+        }
+
+        toast.loading("Acquiring GPS...");
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude } = position.coords;
+            const startPos: [number, number] = [latitude, longitude];
+            setCurrentPos(startPos);
+            setPath([startPos]);
+            setIsSharing(true);
+            toast.dismiss();
+            toast.success(`Trip started! Live location shared.`);
+
+            // Log to Firebase
+            const contactsSelected = Array.from(selected).map((idx) => contacts[idx]?.phone).filter(Boolean) as string[];
+            try {
+                const docRef = await logTripShareStart({
+                    contacts: contactsSelected,
+                    startLatitude: latitude,
+                    startLongitude: longitude
+                });
+                tripDocIdRef.current = docRef.id;
+            } catch (e) {
+                console.error("Failed to log start trip", e);
+            }
+
+            // Start Watch
+            watchIdRef.current = navigator.geolocation.watchPosition(
+                async (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    const newPos: [number, number] = [latitude, longitude];
+                    setCurrentPos(newPos);
+                    setPath(prev => [...prev, newPos]);
+
+                    // Update Firestore
+                    if (tripDocIdRef.current) {
+                        try {
+                            const tripRef = doc(db, "tripShares", tripDocIdRef.current!);
+                            await updateDoc(tripRef, {
+                                currentLatitude: latitude,
+                                currentLongitude: longitude,
+                                lastUpdated: new Date() // Firestore timestamp would be better but Date works for client update
+                            });
+                        } catch (err) {
+                            console.error("Error updating location", err);
+                        }
+                    }
+                },
+                (err) => {
+                    console.error(err);
+                    toast.error("Lost GPS signal.");
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+                }
+            );
+
+        }, (err) => {
+            console.error(err);
+            toast.dismiss();
+            toast.error("Please allow location access to share your trip.");
+        });
+
+    }, [selected, contacts]);
+
+    // Cleanup
+    useEffect(() => {
+        return () => {
+            if (watchIdRef.current !== null) {
+                navigator.geolocation.clearWatch(watchIdRef.current);
+            }
+        }
+    }, []);
+
     // React to global force active prop
     useEffect(() => {
         if (forceActive && !isSharing) {
             handleStartTrip();
         } else if (!forceActive && isSharing) {
-            // Optional: Stop sharing if global switch turns off? 
-            // For now let's keep it manual stop or auto trip completion
-            setIsSharing(false);
+            stopSharing();
         }
-    }, [forceActive]);
+    }, [forceActive, isSharing, handleStartTrip, stopSharing]);
 
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isSharing) {
-            interval = setInterval(() => {
-                setCurrentPos(prev => {
-                    if (prev >= route.length - 1) {
-                        setIsSharing(false);
-                        toast.success("Trip completed! Notification sent to contacts.");
-                        return 0;
-                    }
-                    return prev + 1;
-                });
-            }, 2000);
-        } else {
-            setCurrentPos(0);
-        }
-        return () => clearInterval(interval);
-    }, [isSharing]);
 
-    const handleStartTrip = () => {
-        setIsSharing(true);
-        toast("Trip started! Live location shared with 3 contacts.");
+    const toggleSelect = (idx: number) => {
+        setSelected(prev => {
+            const next = new Set(prev);
+            if (next.has(idx)) next.delete(idx);
+            else next.add(idx);
+            return next;
+        });
     };
 
     return (
@@ -96,10 +176,15 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
 
                 <div className="flex-1 space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">Trusted Contacts</label>
+                        <label className="text-sm font-medium text-muted-foreground">Trusted Contacts (choose first)</label>
                         <div className="space-y-2">
                             {contacts.map((contact, i) => (
-                                <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-background border shadow-sm">
+                                <button
+                                    key={i}
+                                    onClick={() => toggleSelect(i)}
+                                    className={`flex w-full items-center gap-3 p-2 rounded-lg border shadow-sm transition-colors ${selected.has(i) ? "bg-primary/10 border-primary/30" : "bg-background"
+                                        }`}
+                                >
                                     <Avatar className="w-8 h-8">
                                         <AvatarImage src={contact.image} />
                                         <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
@@ -107,11 +192,21 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium truncate">{contact.name}</p>
                                         <div className="flex items-center gap-1.5">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${isSharing ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`} />
-                                            <p className="text-xs text-muted-foreground">{isSharing ? contact.status : "Offline"}</p>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${isSharing && selected.has(i) ? 'bg-green-500 animate-pulse' : selected.has(i) ? 'bg-primary' : 'bg-gray-300'
+                                                }`} />
+                                            <p className="text-xs text-muted-foreground">
+                                                {isSharing
+                                                    ? selected.has(i) ? contact.status : "Not selected"
+                                                    : selected.has(i) ? "Selected" : "Not selected"}
+                                            </p>
                                         </div>
+                                        <p className="text-[10px] text-muted-foreground truncate">{contact.phone}</p>
                                     </div>
-                                </div>
+                                    <div className={`w-6 h-6 rounded-md border flex items-center justify-center ${selected.has(i) ? "bg-primary text-primary-foreground border-primary" : "bg-background"
+                                        }`}>
+                                        {selected.has(i) && <CheckCircle2 className="w-4 h-4" />}
+                                    </div>
+                                </button>
                             ))}
                         </div>
                     </div>
@@ -124,16 +219,13 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                             onClick={handleStartTrip}
                         >
                             <Navigation className="w-4 h-4 mr-2" />
-                            Start Simulated Trip
+                            Start Live Trip
                         </Button>
                     ) : (
                         <Button
                             variant="destructive"
                             className="w-full"
-                            onClick={() => {
-                                setIsSharing(false);
-                                toast.info("Trip sharing stopped.");
-                            }}
+                            onClick={stopSharing}
                         >
                             Stop Sharing
                         </Button>
@@ -143,27 +235,27 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
 
             {/* Map Area */}
             <div className="flex-1 relative bg-gray-100 dark:bg-gray-800">
-                {/* Note: In a real app we'd load the map script properly. For demo simplicity assuming Leaflet works or showing placeholder */}
-                <MapContainer center={[28.6120, 77.2130]} zoom={15} style={{ height: "100%", width: "100%" }}>
+                <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: "100%", width: "100%" }}>
                     <TileLayer
                         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
-                    <Polyline positions={route as any} color="#ec4899" weight={4} dashArray="10, 10" opacity={0.5} />
 
-                    {isSharing && (
-                        <Marker position={route[currentPos] as any}>
-                            <Popup>
-                                <div className="text-center">
-                                    <p className="font-bold text-sm">You are here</p>
-                                    <p className="text-xs text-muted-foreground">Updated just now</p>
-                                </div>
-                            </Popup>
-                        </Marker>
+                    {path.length > 0 && <Polyline positions={path} color="#ec4899" weight={4} opacity={0.8} />}
+
+                    {currentPos && (
+                        <>
+                            <SetViewOnClick coords={currentPos} />
+                            <Marker position={currentPos}>
+                                <Popup>
+                                    <div className="text-center">
+                                        <p className="font-bold text-sm">You are here</p>
+                                        <p className="text-xs text-muted-foreground">Live GPS</p>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        </>
                     )}
-                    <Marker position={route[route.length - 1] as any}>
-                        <Popup>Destination</Popup>
-                    </Marker>
                 </MapContainer>
 
                 {/* Live Status Overlay */}
@@ -180,12 +272,12 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
                                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                                     <div>
                                         <p className="text-sm font-semibold">Live Location Active</p>
-                                        <p className="text-xs text-muted-foreground">Updates sent every 30s</p>
+                                        <p className="text-xs text-muted-foreground">Sharing with {selected.size} contacts</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xs font-medium text-primary">ETA</p>
-                                    <p className="text-sm font-bold">~5 mins</p>
+                                    <p className="text-xs font-medium text-primary">GPS</p>
+                                    <p className="text-sm font-bold">Active</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -195,5 +287,14 @@ const TripSharingDemo = ({ forceActive = false }: DemoProps) => {
         </div>
     );
 };
+
+// Helper to center map on GPS update
+function SetViewOnClick({ coords }: { coords: [number, number] }) {
+    const map = useMap();
+    useEffect(() => {
+        map.setView(coords, map.getZoom());
+    }, [coords, map]);
+    return null;
+}
 
 export default TripSharingDemo;

@@ -82,6 +82,11 @@ export const indiaMarkers: MapMarker[] = [
     { id: "or4", lat: 19.3255, lng: 84.8020, type: "safespace", title: "Biju Patnaik Park", description: "Secured family park" },
     { id: "or5", lat: 19.3060, lng: 84.8210, type: "police", title: "Railway Station Security", description: "RPF presence at Berhampur Station" },
     { id: "or6", lat: 19.2662, lng: 84.8872, type: "safe", title: "Gopalpur Beach Main", description: "CCTV monitored tourist zone" },
+    { id: "or7-bm", lat: 19.3120, lng: 84.7950, type: "safe", title: "Brahmapur City Center", description: "CCTV monitored commercial hub" },
+    { id: "or8-bm", lat: 19.3180, lng: 84.8000, type: "safespace", title: "Brahmapur Municipal Office", description: "Secured government building" },
+    { id: "or9-bm", lat: 19.3050, lng: 84.7850, type: "police", title: "Brahmapur North Police Station", description: "Local police station" },
+    { id: "or10-bm", lat: 19.3200, lng: 84.8100, type: "hospital", title: "Brahmapur General Hospital", description: "24/7 emergency care" },
+    { id: "or11-bm", lat: 19.2535, lng: 84.8150, type: "safe", title: "NIST University Campus", description: "Secured educational campus (Palur Hills, near Golanthara)" },
 
     // Bhubaneswar
     { id: "or7", lat: 20.2444, lng: 85.8189, type: "hospital", title: "AIIMS Bhubaneswar", description: "Premier central govt hospital" },

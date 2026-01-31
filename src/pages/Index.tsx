@@ -199,6 +199,81 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Key Focuses */}
+      <section className="py-24 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-heading mb-4">
+              Key Focuses
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Core capabilities designed to protect you proactively and seamlessly.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                title: "Safety-Scored Routes",
+                points: ["Real-time 0–100 scoring", "Compare multiple routes", "Time-of-day and weather"],
+              },
+              {
+                title: "Auto Trip Sharing",
+                points: ["Choose contacts before activation", "Automatic trip detection", "Live location + ETA"],
+              },
+              {
+                title: "Shake-to-SOS",
+                points: ["Works with screen locked", "Custom sensitivity", "Sends location, optional alarm"],
+              },
+              {
+                title: "Voice Activation",
+                points: ["Custom safe word", "Background friendly", "Low battery optimized"],
+              },
+              {
+                title: "Offline Mode",
+                points: ["SMS-based alerts", "Cached offline maps", "Last known location"],
+              },
+              {
+                title: "Community Reports",
+                points: ["Anonymous reporting", "Verified highlights", "Incident alerts"],
+              },
+              {
+                title: "Smart Alerts",
+                points: ["Location-based", "Time-sensitive", "Weather + community updates"],
+              },
+              {
+                title: "Guardian Watch",
+                points: ["Up to 5 guardians", "Custom thresholds", "Check-ins, two-way communication"],
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-card border rounded-2xl p-6"
+              >
+                <h3 className="text-lg font-semibold text-foreground mb-3">{item.title}</h3>
+                <ul className="space-y-2">
+                  {item.points.map((p) => (
+                    <li key={p} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Problem Statement */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
